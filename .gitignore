@@ -1,0 +1,4 @@
+node_modules
+.turbo/cookies
+.DS_Store
+*.log

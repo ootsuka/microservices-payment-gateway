@@ -1,0 +1,155 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:1.27.3-alpine
+    container_name: "${container_name_prefix}-nginx"
+    ports:
+      - "4080:4080"
+      - "5080:5080"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./self-signed-tls/server.crt:/etc/nginx/ssl/server.crt # enforce HTTPS
+      - ./self-signed-tls/server.key:/etc/nginx/ssl/server.key # enforce HTTPS
+    depends_on:
+      - auth-service
+    networks:
+      - transaction-network
+      - auth-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  mongodb:
+    image: mongo:6
+    container_name: "${container_name_prefix}-mongodb"
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - auth-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  mysql:
+    image: mysql:8.0
+    container_name: "${container_name_prefix}-mysql"
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: transactions
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: mypassword
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - transaction-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+
+  redis:
+    image: redis:7
+    container_name: "${container_name_prefix}-redis"
+    networks:
+      - transaction-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  auth-service:
+    build:
+      context: ./packages/auth-service
+    environment:
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://mongodb:27017/auth-db
+    depends_on:
+      - mongodb
+    networks:
+      - auth-network
+    # container_name: "${container_name_prefix}-auth-service"
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  transaction-service:
+    build:
+      context: ./packages/transaction-service
+    env_file:
+      - ./packages/transaction-service/.env
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - transaction-network
+    # container_name: "${container_name_prefix}-transaction-service"
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # One-time container to run SQL scripts on the first startup of MySQL
+  mysql-init:
+    image: mysql:8.0
+    container_name: "${container_name_prefix}-mysql-init"
+    command: /bin/bash -c "until mysqladmin ping --host=mysql --silent; do echo 'Waiting for MySQL'; sleep 2; done; mysql -h mysql -u root -prootpassword transactions < /init-mysql.sql"
+    volumes:
+      - ./init-mysql.sql:/init-mysql.sql
+    # environment:
+    #   MYSQL_ROOT_PASSWORD: rootpassword
+    #   MYSQL_DATABASE: transactions
+    depends_on:
+      - mysql
+    networks:
+      - transaction-network
+    restart: "no"
+
+networks:
+  transaction-network:
+    driver: bridge
+  auth-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
+  mysql-data:

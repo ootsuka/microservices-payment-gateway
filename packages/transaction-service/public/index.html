@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Buy cool new product</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+
+<body>
+    <section>
+        <div class="product">
+            <img src="https://i.imgur.com/EHyR2nP.png" alt="The cover of Stubborn Attachments" />
+            <div class="description">
+                <h3>Stubborn Attachments</h3>
+                <h5>$20.00</h5>
+            </div>
+        </div>
+        <button id="checkout-button">Pay</button>
+    </section>
+    <script>
+        const stripe = Stripe('pk_test_51Qh3JyAxd8KJKZKwfUxn5iRjZHWxJr7kglvMfFdmokUI3UR3gbsPa9ehJwLHGpMyRgXEMxKJ5zRVsLUKwiaBqNb700yrt2yQ2x'); // 替换为你的测试公开密钥
+        const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ODcxZWExMzI0MDk2MDQ0MTNjOGJhYyIsInVzZXJuYW1lIjoieGluQGhvdG1haWwuY29tIiwiaWF0IjoxNzM2OTIyMjQzLCJleHAiOjE3MzY5Mjk0NDN9.mVmcE3n6DVPwtCzafoGlHIfdqGJsOZGIxndQWUaoANY'
+        document.getElementById('checkout-button').addEventListener('click', async () => {
+            try {
+                // 向后端发起请求，创建 Checkout Session
+                const response = await fetch('http://localhost:5000/api/transactions/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({
+                        userId: 1,
+                        amount: 1,
+                        type: 'credit',
+                        currency: 'rmb'
+                    })
+                });
+                const session = await response.json();
+                console.log(session)
+
+                // 使用 Stripe.js 重定向到支付页面
+                const result = await stripe.redirectToCheckout({ sessionId: session.sessionId });
+                if (result.error) {
+                    console.error(result.error.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    </script>
+</body>
+
+</html>
