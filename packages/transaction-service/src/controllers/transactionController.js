@@ -17,21 +17,7 @@ const handleError = (res, error) => {
 // Create a new transaction
 const createTransaction = async (req, res) => {
 
-    const { userId, amount, type } = req.body;
-
-    // Validate input
-    if (!userId || !amount || !type) {
-        return res.status(400).json({ error: 'Missing required fields: userId, amount, or type' });
-    }
-
-    // Additional validation for transaction type and amount
-    if (!['credit', 'debit'].includes(type)) {
-        return res.status(400).json({ error: 'Invalid transaction type. Must be "credit" or "debit".' });
-    }
-
-    if (amount <= 0) {
-        return res.status(400).json({ error: 'Amount must be greater than zero.' });
-    }
+    const userId = req.user.id;
 
     try {
         // Create transaction
@@ -50,7 +36,23 @@ const createTransaction = async (req, res) => {
                 description: 'test'
             }
         })
-        res.json({ sessionId: session.id });
+        //simulate webhook handling logic cause webhook url needs to be public
+        await Transaction.create({
+            userId: userId,
+            transactionId: Math.floor(Math.random() * 10000),
+            amount: 100 * Math.random(),
+            currency: "rmb",
+            status: 'success',
+            description: "test transaction",
+        });
+
+
+        const cacheKey = `transcations:${userId}`
+        await redisClient.del(cacheKey)
+        res.status(201).json({
+            message: 'Transaction created successfully',
+            session
+        });
     } catch (error) {
         handleError(res, error);
     }
@@ -59,7 +61,7 @@ const createTransaction = async (req, res) => {
 // Get transactions for a specific user
 const getTransactionsByUser = async (req, res) => {
 
-    const { userId } = req.params;
+    const userId = req.user.id;
 
     // Validate input
     if (!userId) {
@@ -83,36 +85,34 @@ const getTransactionsByUser = async (req, res) => {
         await redisClient.set(cacheKey, JSON.stringify(transactions), 'EX', 3600)
         res.status(200).json(transactions);
     } catch (error) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to retrieve transactions' });
+        handleError(res, err)
     }
 }
 
 
 const handleWebhook = async (req, res) => {
-    console.log('webhoolk')
+    const userId = req.user.id;
     const sig = req.headers['stripe-signature'];
     let event;
 
     try {
-        // 验证 Webhook 签名
         event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
     } catch (err) {
         console.error('Webhook signature verification failed:', err.message);
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
-    // 处理事件类型
+    // handle event
     if (event.type === 'checkout.session.completed') {
         const session = event.data.object;
 
-        // 确保支付成功
+        // ensure paid
         if (session.payment_status === 'paid') {
-            // 更新 MySQL 数据库
+            // update in database
             try {
                 await Transaction.create({
-                    userId: session.metadata.userId, // 从 metadata 中提取用户 ID
-                    amount: session.amount_total / 100, // Stripe 返回的金额单位是最小货币单位
+                    userId: userId,
+                    amount: session.amount_total / 100,
                     currency: session.currency,
                     status: 'success',
                     description: session.metadata.description,
@@ -123,10 +123,7 @@ const handleWebhook = async (req, res) => {
                 await redisClient.del(cacheKey)
                 res.status(201).json({
                     message: 'Transaction created successfully',
-                    transaction,
                 });
-
-                console.log('Transaction recorded in database successfully.');
             } catch (error) {
                 console.error('Error saving transaction:', error);
             }

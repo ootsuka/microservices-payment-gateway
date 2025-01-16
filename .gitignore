@@ -2,3 +2,4 @@ node_modules
 .turbo/cookies
 .DS_Store
 *.log
+.turbo/daemon/01697777ac87c321-turbo.log.2025-01-14

@@ -3,7 +3,7 @@ const sequelize = require('../config/db'); // assuming you have a separate datab
 
 const Transaction = sequelize.define('Transaction', {
     userId: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING,
         allowNull: false
     },
     amount: {
@@ -21,6 +21,8 @@ const Transaction = sequelize.define('Transaction', {
         unique: true
     }
 }, {
+    tableName: 'Transaction', // Explicitly set the table name
+    freezeTableName: true,
     timestamps: true,  // Will create createdAt and updatedAt fields automatically
 });
 

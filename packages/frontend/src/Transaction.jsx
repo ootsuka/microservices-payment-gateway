@@ -16,15 +16,9 @@ const Transaction = () => {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({
-                    userId: 1,
-                    amount: 1,
-                    type: 'credit',
-                    currency: 'rmb',
-                }),
             });
 
-            const session = await response.json();
+            const { session } = await response.json();
 
             // Redirect to Stripe Checkout
             const result = await stripe.redirectToCheckout({

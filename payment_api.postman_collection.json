@@ -1,0 +1,137 @@
+{
+	"info": {
+		"_postman_id": "c89e5407-d8b1-4015-abad-f8435f48c9d0",
+		"name": "payment api",
+		"description": "This Postman collection contains all the endpoints for the **Transaction API**, a system for managing user transactions with functionalities for creating, viewing, and handling payment webhooks. The API is designed to work with MongoDB user IDs and MySQL for transaction storage.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "675724"
+	},
+	"item": [
+		{
+			"name": "register",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"test@gmail.com\",\n    \"password\": \"testing123\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://localhost:4080/api/auth/register",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "4080",
+					"path": [
+						"api",
+						"auth",
+						"register"
+					]
+				},
+				"description": "This endpoint allows new users to register for an account by providing their details. Upon successful registration, the user will be added to the database and can log in to access other API features."
+			},
+			"response": []
+		},
+		{
+			"name": "login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"test@gmail.com\",\n    \"password\": \"testing123\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://localhost:4080/api/auth/login",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "4080",
+					"path": [
+						"api",
+						"auth",
+						"login"
+					]
+				},
+				"description": "This endpoint authenticates a user by validating their email and password. On successful authentication, a JWT token is returned for accessing protected resources."
+			},
+			"response": []
+		},
+		{
+			"name": "create",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ODg1Zjc1MjM1Y2EyNWNmYTQxOTY5YyIsInVzZXJuYW1lIjoidGVzdEBnbWFpbC5jb20iLCJpYXQiOjE3MzY5OTA1OTEsImV4cCI6MTczNjk5Nzc5MX0.LrC9Yf0Uw52M2oTgH-4I-Lf-QPt7frucMUqH7xzg-HE",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "https://localhost:5080/api/transactions/create",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "5080",
+					"path": [
+						"api",
+						"transactions",
+						"create"
+					]
+				},
+				"description": "This endpoint creates a new transaction for an authenticated user. The request must include a valid JWT token, obtained from the login endpoint, as a Bearer token in the Authorization header."
+			},
+			"response": []
+		},
+		{
+			"name": "get transaction history",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ODg1Zjc1MjM1Y2EyNWNmYTQxOTY5YyIsInVzZXJuYW1lIjoidGVzdEBnbWFpbC5jb20iLCJpYXQiOjE3MzY5OTA1OTEsImV4cCI6MTczNjk5Nzc5MX0.LrC9Yf0Uw52M2oTgH-4I-Lf-QPt7frucMUqH7xzg-HE",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://localhost:5080/api/transactions/history",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "5080",
+					"path": [
+						"api",
+						"transactions",
+						"history"
+					]
+				},
+				"description": "Retrieve the transaction history for the authenticated user. A valid JWT token, obtained from the login endpoint, must be included as a Bearer token in the Authorization header."
+			},
+			"response": []
+		}
+	]
+}
