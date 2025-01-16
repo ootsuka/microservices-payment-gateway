@@ -22,7 +22,7 @@ const Transaction = () => {
 
             // Redirect to Stripe Checkout
             const result = await stripe.redirectToCheckout({
-                sessionId: session.sessionId,
+                sessionId: session.id,
             });
 
             if (result.error) {

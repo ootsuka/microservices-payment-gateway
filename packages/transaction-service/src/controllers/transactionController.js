@@ -39,10 +39,10 @@ const createTransaction = async (req, res) => {
         //simulate webhook handling logic cause webhook url needs to be public
         await Transaction.create({
             userId: userId,
-            transactionId: Math.floor(Math.random() * 10000),
-            amount: 100 * Math.random(),
-            currency: "rmb",
-            status: 'success',
+            transactionId: session.id,
+            amount: session.amount_total / 100,
+            currency: session.currency,
+            status: 'success', //assume it goes through
             description: "test transaction",
         });
 
