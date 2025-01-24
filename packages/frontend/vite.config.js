@@ -7,12 +7,12 @@ export default defineConfig({
   server: {
     proxy: {
       '/api/auth': {
-        target: 'https://localhost:4080',
+        target: 'https://localhost:8081',
         changeOrigin: true,
         secure: false, // Ignore SSL issues
       },
       '/api/transactions': {
-        target: 'https://localhost:5080',
+        target: 'https://localhost:8081',
         changeOrigin: true,
         secure: false, // Ignore SSL issues
       }

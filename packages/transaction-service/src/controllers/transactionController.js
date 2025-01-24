@@ -14,6 +14,36 @@ const handleError = (res, error) => {
     });
 };
 
+const createTransactionIntent = async (req, res) => {
+    const { amount, currency, paymentMethodId } = req.body;
+
+    try {
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: amount,
+            currency: currency,
+            payment_method: paymentMethodId,
+            confirmation_method: 'manual',
+            confirm: true
+        })
+
+        await Transaction.create({
+            userId: req.user.id,
+            transactionId: paymentIntent.id,
+            amount: paymentIntent.amount / 100,
+            currency: paymentIntent.currency,
+            status: paymentIntent.status, //assume it goes through
+            description: "test transaction",
+        });
+        res.status(201).json({
+            message: 'Intent created successfully',
+            client_secret: paymentIntent.client_secret
+        });
+    } catch (error) {
+
+    }
+
+}
+
 // Create a new transaction
 const createTransaction = async (req, res) => {
 
@@ -136,6 +166,7 @@ const handleWebhook = async (req, res) => {
 
 module.exports = {
     createTransaction,
+    createTransactionIntent,
     getTransactionsByUser,
     handleWebhook
 };

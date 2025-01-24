@@ -23,7 +23,7 @@ Please refer to [Postman Collection](./payment_api.postman_collection.json)
 ## Diagram to help you better understand the architecture
 (The dotted line means it has not been implemented and can be optimzed)
 
-![Diagram](./payment.svg)
+![Diagram](./arch.svg)
 
 This project implements a robust payment processing architecture to handle high volumes of transactions with a focus on scalability, security, and reliability. 
 
